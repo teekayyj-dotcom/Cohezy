@@ -1,40 +1,97 @@
-version: '3.9'
+version: "3.9"
+
+x-healthcheck: &healthcheck
+  test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+  interval: 1m30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
 
 services:
-  backend:
-    build: ./backend
-    container_name: backend
-    volumes:
-      - ./backend:/app
-    ports:
-      - "8000:8000"
+  db:
+    image: postgres:15
+    container_name: cohezy_db
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/studytogether
-    depends_on:
-      - db
-
-  frontend:
-    build: ./frontend
-    container_name: frontend
+      POSTGRES_USER: cohezy
+      POSTGRES_PASSWORD: cohezy_password
+      POSTGRES_DB: cohezy_db
     volumes:
-      - ./frontend:/app
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - cohezy_network
+    healthcheck:
+      <<: *healthcheck
+
+  redis:
+    image: redis:7
+    container_name: cohezy_redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - cohezy_network
+    healthcheck:
+      <<: *healthcheck
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+  
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cohezy_backend
+    environment:
+      DATABASE_URL: postgres://cohezy:cohezy_password@db:5432/cohezy_db
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      NODE_ENV: production
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cohezy_network
+    healthcheck:
+      <<: *healthcheck
 
-  db:
-    image: postgres:14
-    container_name: db
-    restart: always
-    environment:
-      POSTGRES_DB: studytogether
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+  frontend:
+    build:
+      context: ./frontend
+    container_name: cohezy-frontend
     ports:
-      - "5432:5432"
+      - "3001:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - cohezy_network
+    healthcheck:
+      <<: *healthcheck
 
-volumes:
-  pgdata:
+  reverse-proxy:
+    image: nginx:latest
+    container_name: cohezy_reverse_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - cohezy_network
+
+  networks:
+    cohezy_network:
+      driver: bridge
+  volumes:
+    db_data:
+    redis_data:

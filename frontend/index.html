@@ -1,13 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cohezy App</title>
+  <link rel="stylesheet" href="./styles/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Cohezy</h1>
+
+    <!-- Form đăng ký -->
+    <section id="register-section">
+      <h2>Đăng ký</h2>
+      <input id="register-email" placeholder="Email" type="email" />
+      <input id="register-password" placeholder="Password" type="password" />
+      <button onclick="registerUser()">Đăng ký</button>
+    </section>
+
+    <!-- Form đăng nhập -->
+    <section id="login-section">
+      <h2>Đăng nhập</h2>
+      <input id="login-email" placeholder="Email" type="email" />
+      <input id="login-password" placeholder="Password" type="password" />
+      <button onclick="loginUser()">Đăng nhập</button>
+    </section>
+
+    <!-- Hiển thị user -->
+    <section id="user-info" class="hidden">
+      <h2>Thông tin User</h2>
+      <p id="user-email"></p>
+      <p id="user-role"></p>
+      <button onclick="logoutUser()">Đăng xuất</button>
+    </section>
+
+    <!-- Quản lý sessions -->
+    <section id="session-section" class="hidden">
+      <h2>Quản lý Sessions</h2>
+      <input id="session-name" placeholder="Tên session" />
+      <button onclick="createSession()">Tạo session</button>
+
+      <h3>Danh sách sessions</h3>
+      <ul id="session-list"></ul>
+    </section>
+  </div>
+
+  <script src="./scripts/main.js"></script>
+</body>
 </html>
