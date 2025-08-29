@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, UUID4
 from datetime import datetime
-from backend.src.schemas.user import UserResponse
+from .user import UserResponse
 
 class SessionBase(BaseModel):
     user_id: UUID4 = Field(..., description="The unique identifier for the user")

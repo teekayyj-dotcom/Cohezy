@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.src.config.database import get_db
-from backend.src.services.session_service import SessionService
-from backend.src.services.auth_service import require_role
-from backend.src.api.users import get_current_user
-from backend.src.models.user import User
-from backend.src.utils.enums import UserRole
+from ..config.database import get_db
+from ..services.session_service import SessionService
+from ..services.auth_service import require_role
+from .users import get_current_user
+from ..models.user import User
+from ..utils.enums import UserRole
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 

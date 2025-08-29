@@ -2,7 +2,7 @@ import logging
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from backend.src.config.settings import settings
+from ..config.settings import settings
 
 # Đường dẫn lưu log
 LOG_DIR = Path(__file__).resolve().parent / "logs"

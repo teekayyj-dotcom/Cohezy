@@ -1,14 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from backend.src.api import deps
-from backend.src.schemas.user import UserCreate, UserResponse, UserListResponse
-from backend.src.services.user_service import UserService
+from . import deps
+from ..schemas.user import UserCreate, UserResponse, UserListResponse
+from ..services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-# ==============================
-# 1. Create new user
-# ==============================
 @router.post(
     "/",
     response_model=UserResponse,
@@ -22,9 +19,6 @@ def create_user(
 ) -> UserResponse:
     return UserService.create_user(db, user)
 
-# ==============================
-# 2. Get all users
-# ==============================
 @router.get(
     "/",
     response_model=UserListResponse,
@@ -40,9 +34,6 @@ def get_all_users(
     users = UserService.get_all_users(db, skip=skip, limit=limit)
     return UserListResponse(users=users)
 
-# ==============================
-# 3. Get user by ID
-# ==============================
 @router.get(
     "/{user_id}",
     response_model=UserResponse,
@@ -59,9 +50,6 @@ def get_user_by_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
-# ==============================
-# 4. Get current user info (/me)
-# ==============================
 @router.get(
     "/me",
     response_model=UserResponse,
@@ -73,9 +61,6 @@ def get_current_user(
 ) -> UserResponse:
     return current_user
 
-# ==============================
-# 5. Delete current user (/me)
-# ==============================
 @router.delete(
     "/me",
     response_model=UserResponse,

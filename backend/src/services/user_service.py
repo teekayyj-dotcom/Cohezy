@@ -3,31 +3,26 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 from jose import jwt
-from backend.src import models, schemas
-from backend.src.utils.hashing import hash_password, verify_password
-from backend.src.utils.redis_util import redis_client
-from backend.src.config.settings import settings
-from backend.src.core.logger import get_logger
+from ..models.user import User
+from ..utils.hashing import hash_password, verify_password
+from ..utils.enums import UserRole
+from ..schemas.user import UserCreate, UserUpdate, UserResponse
+from ..schemas.auth import TokenResponse, RefreshTokenResponse
+from ..config.settings import settings
+from ..core.logger import get_logger
 
 logger = get_logger(__name__)
 
 class UserService:
-    """
-    User Service
-    ============
-    Xử lý toàn bộ business logic liên quan đến User, bao gồm:
-    - Đăng ký
-    - Đăng nhập
-    - Quản lý token
-    - CRUD user
-    """
-
-    # ===================== AUTH =====================
 
     @staticmethod
-    def create_user(db: Session, user: schemas.UserCreate) -> models.User:
+    def get_user_by_id(db: Session, user_id: str) -> User:
+        return db.query(User).filter(User.id == user_id).first()
+
+    @staticmethod
+    def create_user(db: Session, user: UserCreate) -> User:
         try:
-            db_user = db.query(models.User).filter(models.User.email == user.email).first()
+            db_user = db.query(User).filter(User.email == user.email).first()
             if db_user:
                 logger.warning(f"Email {user.email} đã tồn tại")
                 raise HTTPException(
@@ -36,10 +31,11 @@ class UserService:
                 )
 
             hashed_password = hash_password(user.password)
-            new_user = models.User(
+            new_user = User(
                 email=user.email,
                 hashed_password=hashed_password,
-                role=user.role if hasattr(user, "role") else "student"
+                role=user.role if hasattr(user, "role") else UserRole.STUDENT,
+                full_name=user.full_name if hasattr(user, "full_name") else None
             )
 
             db.add(new_user)
@@ -61,7 +57,7 @@ class UserService:
 
     @staticmethod
     def authenticate_user(db: Session, email: str, password: str):
-        user = db.query(models.User).filter(models.User.email == email).first()
+        user = db.query(User).filter(User.email == email).first()
         if not user:
             logger.warning(f"Đăng nhập thất bại: {email} không tồn tại")
             return None
@@ -79,7 +75,6 @@ class UserService:
         expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
         to_encode.update({"exp": expire})
         return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
     @staticmethod
     def login(db: Session, email: str, password: str):
         user = UserService.authenticate_user(db, email, password)
@@ -97,34 +92,30 @@ class UserService:
             expires_delta=timedelta(days=7)
         )
 
-        # Lưu refresh token vào Redis với TTL = 7 ngày
-        redis_client.setex(f"refresh_token:{user.id}", timedelta(days=7), refresh_token)
+        # redis_client.setex(f"refresh_token:{user.id}", timedelta(days=7), refresh_token)
 
         return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
     @staticmethod
     def logout(user_id: str):
-        redis_client.delete(f"refresh_token:{user_id}")
         logger.info(f"Đăng xuất user: {user_id}")
         return {"msg": "Logged out successfully"}
 
-    # ===================== CRUD =====================
-
     @staticmethod
     def get_user_by_email(db: Session, email: str):
-        return db.query(models.User).filter(models.User.email == email).first()
+        return db.query(User).filter(User.email == email).first()
 
     @staticmethod
     def get_user_by_id(db: Session, user_id: str):
-        return db.query(models.User).filter(models.User.id == user_id).first()
+        return db.query(User).filter(User.id == user_id).first()
 
     @staticmethod
     def get_all_users(db: Session, skip: int = 0, limit: int = 100):
-        return db.query(models.User).offset(skip).limit(limit).all()
+        return db.query(User).offset(skip).limit(limit).all()
 
     @staticmethod
-    def update_user(db: Session, user_id: str, update_data: schemas.UserUpdate):
-        db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    def update_user(db: Session, user_id: str, update_data: UserUpdate):
+        db_user = db.query(User).filter(User.id == user_id).first()
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -138,7 +129,7 @@ class UserService:
 
     @staticmethod
     def delete_user(db: Session, user_id: str):
-        db_user = db.query(models.User).filter(models.User.id == user_id).first()
+        db_user = db.query(User).filter(User.id == user_id).first()
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
 

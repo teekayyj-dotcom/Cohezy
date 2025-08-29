@@ -1,13 +1,13 @@
 from pydantic import BaseModel, EmailStr, Field, UUID4
 from datetime import datetime
-from backend.src.utils.enums import UserRole
+from ..utils.enums import UserRole
 
 class UserBase(BaseModel):
     email: EmailStr = Field(..., description="The user's email address")
     full_name: str = Field(..., description="The user's full name")
     is_active: bool = Field(default=True, description="Indicates if the user is active")
     is_superuser: bool = Field(default=False, description="Indicates if the user has superuser privileges")
-    role: UserRole = Field(default=UserRole.USER, description="The user's role")
+    role: UserRole = Field(default=UserRole.STUDENT, description="The user's role")
 
 
 class UserCreate(UserBase):
@@ -30,4 +30,8 @@ class UserInDBBase(UserBase):
     updated_at: datetime = Field(..., description="The timestamp when the user was last updated")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        
+class UserListResponse(BaseModel):
+    users: list[UserResponse]
+    total: int

@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "Cohezy"
     admin_email: str = "letuankiet0012@gmail.com"
+    API_V1_STR: str = "/api/v1"
 
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     REDIS_PORT: str
     REDIS_DB: int = 0
 
-    JWT_SECRET_KEY: str
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 
 

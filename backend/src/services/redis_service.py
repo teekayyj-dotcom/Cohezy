@@ -1,5 +1,5 @@
 import redis
-from backend.src.config.settings import settings
+from ..config.settings import settings
 
 class RedisService:
     client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0, decode_responses=True)

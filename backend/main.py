@@ -1,18 +1,45 @@
 from fastapi import FastAPI
-from backend.src.api.router import api_router
-from backend.src.core.config import settings
+from fastapi.staticfiles import StaticFiles
+from src.api.router import api_router
+from src.core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
-from backend.src.config.database import engine, Base
-from backend.src.config.redis_client import init_redis, close_redis
-from backend.src.core.logger import get_logger
+from src.config.database import engine, Base
+from src.core.logger import get_logger
+from src.db.init_db import init_db
+from src.models import session, user, session_member
 
 logger = get_logger(__name__)
 
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Cohezy",
+        version="1.0.0",
+        description="Cohezy API documentation",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "OAuth2PasswordBearer": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
 app = FastAPI(title="Cohezy", version="1.0.0")
 
-Base.metadata.create_all(bind=engine)
+app.openapi = custom_openapi
+
+# Initialize database
+init_db()
 
 # Include routers
+from src.core.config import settings
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -20,12 +47,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting up...")
-    init_redis()
 
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("Shutting down...")
-    close_redis()
 
 @app.get("/health")
 def health_check():

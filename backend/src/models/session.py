@@ -1,8 +1,9 @@
 import uuid
 from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from .base import Base
+
+from sqlalchemy.orm import relationship
 
 class Session(Base):
     __tablename__ = 'sessions'
@@ -14,4 +15,8 @@ class Session(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    session_members = relationship("SessionMember", back_populates="session")
+    members = relationship(
+        "SessionMember",
+        back_populates="session",
+        cascade="all, delete-orphan"
+    )

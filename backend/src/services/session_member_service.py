@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, UUID4
-from backend.src.utils.enums import UserRole
+from utils.enums import UserRole
 
 class SessionMemberBase(BaseModel):
     user_id: UUID4 = Field(..., description="The unique identifier for the user")

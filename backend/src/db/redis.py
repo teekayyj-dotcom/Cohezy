@@ -1,5 +1,5 @@
 import redis
-from backend.src.config import settings
+from ..config import settings
 
 redis_client = redis.StrictRedis(
     host=settings.REDIS_HOST,

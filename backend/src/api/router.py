@@ -1,7 +1,8 @@
-from fastapi import APiRouter, Depends, HTTPException, status
-from backend.src.api import auth, users, sessions
+from fastapi import APIRouter, Depends, HTTPException, status
+from . import auth, users, sessions
+from ..core.config import settings
 
-api_router = APIRouter(prefix="/api")
+api_router = APIRouter()
 
 api_router.include_router(auth.router)
 api_router.include_router(users.router)

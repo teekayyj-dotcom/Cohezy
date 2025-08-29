@@ -1,10 +1,10 @@
 import uuid
-from enum import Enum
-from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy import Column, String, Boolean, DateTime, Enum as SQLEnum
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from .base import Base
-from backend.src.utils.enums import UserRole
+from ..utils.enums import UserRole
+
+from sqlalchemy.orm import relationship
 
 class User(Base):
     __tablename__ = 'users'
@@ -16,7 +16,10 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT)
 
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
-
-    session_members = relationship("SessionMember", back_populates="user")
+    session_memberships = relationship(
+        "SessionMember",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
