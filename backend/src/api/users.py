@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from . import deps
 from ..schemas.user import UserCreate, UserResponse, UserListResponse
 from ..services.user_service import UserService
+from ..utils.enums import UserRole
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -45,9 +46,30 @@ def get_user_by_id(
     db: Session = Depends(deps.get_db),
     current_user: UserResponse = Depends(deps.get_current_user)
 ) -> UserResponse:
-    user = db.query(UserService.model).filter_by(id=user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    """Get a specific user by ID"""
+    user = UserService.get_user_by_id(db, user_id)
+    return user
+
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete a user",
+    response_description="User deleted successfully"
+)
+def delete_user(
+    user_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: UserResponse = Depends(deps.get_current_user)
+):
+    """Delete a user (soft delete)"""
+    if current_user.id != user_id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    UserService.delete_user(db, user_id)
+    return {"message": "User deleted successfully"}
     return user
 
 @router.get(

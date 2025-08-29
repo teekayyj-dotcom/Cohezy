@@ -17,7 +17,32 @@ class UserService:
 
     @staticmethod
     def get_user_by_id(db: Session, user_id: str) -> User:
-        return db.query(User).filter(User.id == user_id).first()
+        """Get user by ID"""
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        return user
+
+    @staticmethod
+    def delete_user(db: Session, user_id: str) -> bool:
+        """Soft delete a user by setting is_active to False"""
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        user.is_active = False
+        db.commit()
+        return True
+
+    @staticmethod
+    def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
+        """Get all active users with pagination"""
+        return db.query(User).filter(User.is_active == True).offset(skip).limit(limit).all()
 
     @staticmethod
     def create_user(db: Session, user: UserCreate) -> User:

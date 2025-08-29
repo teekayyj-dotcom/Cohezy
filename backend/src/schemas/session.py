@@ -3,28 +3,21 @@ from datetime import datetime
 from .user import UserResponse
 
 class SessionBase(BaseModel):
-    user_id: UUID4 = Field(..., description="The unique identifier for the user")
-    session_token: str = Field(..., description="The session token")
-    expires_at: datetime = Field(..., description="The expiration timestamp of the session")
+    title: str = Field(..., description="The title of the session")
+    description: str | None = Field(None, description="A brief description of the session")
 
 class SessionCreate(SessionBase):
-    name: str = Field(..., description="The name of the session")
-    description: str | None = Field(None, description="A brief description of the session")
-    start_time: datetime = Field(..., description="The timestamp when the session starts")
-    end_time: datetime | None = Field(None, description="The timestamp when the session ends")
+    pass
 
 class SessionUpdate(BaseModel):
     session_token: str | None = Field(None, description="The session token")
     expires_at: datetime | None = Field(None, description="The expiration timestamp of the session")
 
 class SessionResponse(SessionBase):
-    id: UUID4 = Field(..., description="The unique identifier for the session")
-    name: str = Field(..., description="The name of the session")
-    description: str | None = Field(None, description="A brief description of the session")
+    id: str = Field(..., description="The unique identifier for the session")
+    is_active: bool = Field(..., description="Whether the session is active")
     created_at: datetime = Field(..., description="The timestamp when the session was created")
-    start_time: datetime = Field(..., description="The timestamp when the session started")
-    end_time: datetime | None = Field(None, description="The timestamp when the session ended")
-    owner_id: UUID4 = Field(..., description="The unique identifier for the session owner")
+    updated_at: datetime | None = Field(None, description="The timestamp when the session was last updated")
 
 class SessionListResponse(BaseModel):
     sessions: list[SessionResponse] = Field(..., description="A list of session responses")

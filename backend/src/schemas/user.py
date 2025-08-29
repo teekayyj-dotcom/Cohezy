@@ -24,6 +24,9 @@ class UserResponse(UserBase):
     id: UUID4 = Field(..., description="The unique identifier for the user")
     created_at: datetime = Field(..., description="The timestamp when the user was created")
 
+    class Config:
+        from_attributes = True
+
 class UserInDBBase(UserBase):
     id: UUID4 = Field(..., description="The unique identifier for the user")
     created_at: datetime = Field(..., description="The timestamp when the user was created")
